@@ -10,6 +10,13 @@ enum Mode
     DEFAULT
 };
 
+enum PlayState
+{
+    PLAYING = 0,
+    STOPPED,
+    PAUSED
+};
+
 typedef struct
 {
     uint16_t x;
