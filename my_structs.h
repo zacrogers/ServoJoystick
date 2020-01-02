@@ -2,9 +2,11 @@
 #define MY_STRUCTS_H
 
 
-enum class Mode
+enum Mode
 {
     JOYSTICK = 0,
+    FOLLOW,
+    PLAY,
     DEFAULT
 };
 
