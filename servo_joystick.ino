@@ -1,14 +1,14 @@
 #include <Servo.h>
 #include "my_structs.h"
 
-uint8_t play_btn_pin = 3;
+const uint8_t play_btn_pin = 3;
+
+const JoyStick js = {.x_pin   = A0, 
+                     .y_pin   = A1, 
+                     .btn_pin = 5};
 
 Servo servo_x;
 Servo servo_y;
-
-JoyStick js = {.x_pin   = A0, 
-               .y_pin   = A1, 
-               .btn_pin = 5};
 
 Pos curr_pos = {.x = 90, .y = 90};
 
@@ -113,5 +113,3 @@ void cycle_mode(void)
     else if(current_mode == PLAY)
         current_mode == JOYSTICK        
 }
-
-
