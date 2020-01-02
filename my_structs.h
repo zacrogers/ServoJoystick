@@ -5,9 +5,9 @@
 enum Mode
 {
     JOYSTICK = 0,
+    RANDOM,
     FOLLOW,
     PLAY,
-    DEFAULT
 };
 
 enum PlayState
