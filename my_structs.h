@@ -1,6 +1,7 @@
 #ifndef MY_STRUCTS_H
 #define MY_STRUCTS_H
 
+/* Servo control method mode */
 enum Mode
 {
     JOYSTICK = 0,
@@ -9,6 +10,7 @@ enum Mode
     PLAY,
 };
 
+/* Control playing of programmed sequence or random mode */
 enum PlayState
 {
     PLAYING = 0,
@@ -16,6 +18,7 @@ enum PlayState
     PAUSED
 };
 
+/* Indexes of buttons for setting mux channel  */
 enum BtnIndex
 {
     BT_PLAY = 0,
@@ -33,6 +36,7 @@ typedef struct
     uint16_t y;
 }Pos;
 
+/* Structs for storing pin defines */
 typedef struct
 {
     uint8_t x_pin;
@@ -66,6 +70,7 @@ enum Position
 #define MID_ANGLE 90
 #define MIN_ANGLE 0
 
+/* For quickly moving laser without having to input angles manually each time */
 extern const Pos quick_pos[NUM_POSITIONS] = {{MIN_ANGLE, MAX_ANGLE}, {MID_ANGLE, MAX_ANGLE}, {MAX_ANGLE, MAX_ANGLE},
                                              {MIN_ANGLE, MID_ANGLE}, {MID_ANGLE, MID_ANGLE}, {MAX_ANGLE, MID_ANGLE},
                                              {MIN_ANGLE, MIN_ANGLE}, {MID_ANGLE, MIN_ANGLE}, {MAX_ANGLE, MIN_ANGLE}};
