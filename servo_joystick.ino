@@ -7,6 +7,10 @@ const JoyStick js = {.x_pin   = A0,
                      .y_pin   = A1, 
                      .btn_pin = 5};
 
+const Mux btn_mux = {.s0 = 6,
+                     .s1 = 7,
+                     .s2 = 10};
+
 Servo servo_x;
 Servo servo_y;
 
@@ -21,6 +25,10 @@ void setup()
 {
     servo_x.attach(8); 
     servo_y.attach(9);
+    
+    pinMode(btn_mux.s0, OUTPUT);
+    pinMode(btn_mux.s1, OUTPUT);
+    pinMode(btn_mux.s2, OUTPUT);
     
     pinMode(js.x_pin, INPUT);
     pinMode(js.y_pin, INPUT);
@@ -46,7 +54,11 @@ void loop()
             break;          
             
         case FOLLOW:
-            break;            
+            break;    
+        
+        case RANDOM:
+            play_random();
+            break;    
     }
 }
 
@@ -60,6 +72,16 @@ Pos read_joystick(void)
     
     set_pos(curr_pos);
 }
+
+ void play_random(void)
+ {
+    if(play_state == PLAYING)
+    {
+        Pos randpos = quick_pos[random(0, NUM_POSITIONS)];
+        set_pos(randpos);
+        delay(500);
+    }
+ }
 
 void play_routine(void)
 {
@@ -104,12 +126,22 @@ void toggle_playstate(void)
 
 void cycle_mode(void)
 {
-    if(current_mode == JOYSTICK)
-        current_mode == FOLLOW
+    switch(current_mode)
+    {
+        case JOYSTICK:
+            current_mode == FOLLOW;
+            break;
         
-    else if(current_mode == FOLLOW)
-        current_mode == PLAY
-        
-    else if(current_mode == PLAY)
-        current_mode == JOYSTICK        
+        case FOLLOW:
+            current_mode == PLAY;
+            break;
+            
+        case PLAY:
+            current_mode == RANDOM;
+            break;
+            
+        case RANDOM:
+            current_mode == JOYSTICK;
+            break;
+    }
 }
