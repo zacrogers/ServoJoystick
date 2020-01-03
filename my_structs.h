@@ -1,7 +1,7 @@
 #ifndef MY_STRUCTS_H
 #define MY_STRUCTS_H
 
-num Mode
+enum Mode
 {
     JOYSTICK = 0,
     RANDOM,
@@ -14,6 +14,16 @@ enum PlayState
     PLAYING = 0,
     STOPPED,
     PAUSED
+};
+
+enum BtnIndex
+{
+    BT_PLAY = 0,
+    BT_STOP, 
+    BT_SAVE,
+    BT_EDIT,
+    BT_INCR_STEP,
+    BT_DECR_STEP
 };
 
 /* Coordinates should be stored as angle */
@@ -32,29 +42,28 @@ typedef struct
 
 typedef struct
 {
-    Pos start;
-    Pos end;
-}Move;
+    uint8_t s0;
+    uint8_t s1;
+    uint8_t s2;
+}Mux;
 
 /* Used to index quick_pos array */
 enum Position
 {
     TL = 0, // top left
-    TR,     // top right
     TM,     // top middle
+    TR,     // top right
     ML,     // mid left
-    MR,     // mid right
     MC,     // mid centre
+    MR,     // mid right
     BL,     // bottom left
-    BR,     // bottom right
     BM,     // bottom middle
+    BR,     // bottom right
     NUM_POSITIONS
 };
 
-const Pos quick_pos[NUM_POSITIONS] = {{0, 0}, {0, 0}, {0, 0},
-                                      {0, 0}, {90, 90}, {0, 0},
-                                      {0, 0}, {0, 0}, {0, 0}};
-
-const Move[] = {};
+extern const Pos quick_pos[NUM_POSITIONS] = {{0, 180}, {90, 180}, {180, 180},
+                                             {0, 90},  {90, 90},  {180, 90},
+                                             {0, 0},   {90, 0},   {180, 0}};
 
 #endif /* MY_STRUCTS_H */
