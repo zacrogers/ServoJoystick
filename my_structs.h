@@ -62,8 +62,12 @@ enum Position
     NUM_POSITIONS
 };
 
-extern const Pos quick_pos[NUM_POSITIONS] = {{0, 180}, {90, 180}, {180, 180},
-                                             {0, 90},  {90, 90},  {180, 90},
-                                             {0, 0},   {90, 0},   {180, 0}};
+#define MAX_ANGLE 180
+#define MID_ANGLE 90
+#define MIN_ANGLE 0
+
+extern const Pos quick_pos[NUM_POSITIONS] = {{MIN_ANGLE, MAX_ANGLE}, {MID_ANGLE, MAX_ANGLE}, {MAX_ANGLE, MAX_ANGLE},
+                                             {MIN_ANGLE, MID_ANGLE}, {MID_ANGLE, MID_ANGLE}, {MAX_ANGLE, MID_ANGLE},
+                                             {MIN_ANGLE, MIN_ANGLE}, {MID_ANGLE, MIN_ANGLE}, {MAX_ANGLE, MIN_ANGLE}};
 
 #endif /* MY_STRUCTS_H */
