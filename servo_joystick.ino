@@ -10,7 +10,8 @@ const JoyStick js = {.x_pin   = A6,
 
 const Mux btn_mux = {.s0 = 6,
                      .s1 = 7,
-                     .s2 = 10};
+                     .s2 = 10
+                     .out = A3};
 
 7Segment disp = 7Segment(11, 12, 13);
 
@@ -20,8 +21,9 @@ Servo servo_y;
 Pos curr_pos = {.x = 90, .y = 90};
 Pos sequence[8] = {};
 
-Mode      curr_mode  = JOYSTICK;
-PlayState play_state = STOPPED;
+uint8_t   current_step = 0;
+Mode      current_mode = JOYSTICK;
+PlayState play_state   = STOPPED;
 
 void setup()
 {
@@ -92,10 +94,15 @@ void play_routine(void)
         for(int step = 1; step < 8; ++step)
         {
             disp.set_num(step);
-            set_pos(path[i]);
+            set_pos(sequence[i]);
             delay(500);
         }
     }
+}
+
+void set_step(uint8_t step, Pos pos)
+{
+    sequence[step] = pos;
 }
 
 void set_pos(Pos p)
@@ -112,10 +119,55 @@ void poll_buttons(void)
         cycle_mode();
     }
     
-    if(digitalRead(play_btn_pin) == HIGH)
+    /* Poll mux inputs */
+    for(uint8_t btn = 0; btn < 8; ++btn)
     {
-        toggle_playstate();
+        if(digitalRead(btn_mux.out) == HIGH)
+        {
+            handle_buttons(btn);
+        }
     }
+}
+
+
+void handle_buttons(uint8_t btn)
+{
+    switch(btn)
+    {
+        case BT_PLAY:
+            toggle_playstate();
+            break;
+            
+        case BT_STOP:
+            break;
+            
+        case BT_SAVE:
+            set_step(current_step, Pos pos);
+            break;
+            
+        case BT_INCR_STEP:
+            incr_step();
+            break;
+            
+        case BT_DECR_STEP:
+            decr_step();
+            break;
+            
+        case BT_DISP_WIDTH:
+            break;
+    }
+}
+
+void incr_step(void)
+{
+    if(step < 8)
+        step++;
+}
+
+void decr_step(void)
+{
+    if(step > 0)
+        step--;
 }
 
 void toggle_playstate(void)
