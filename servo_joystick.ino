@@ -1,22 +1,24 @@
 #include <Servo.h>
 #include "my_structs.h"
+#include "7_segment.hh"
 
 const uint8_t play_btn_pin = 3;
 
-const JoyStick js = {.x_pin   = A0, 
-                     .y_pin   = A1, 
+const JoyStick js = {.x_pin   = A6, 
+                     .y_pin   = A7, 
                      .btn_pin = 5};
 
 const Mux btn_mux = {.s0 = 6,
                      .s1 = 7,
                      .s2 = 10};
 
+7Segment disp = 7Segment(11, 12, 13);
+
 Servo servo_x;
 Servo servo_y;
 
 Pos curr_pos = {.x = 90, .y = 90};
-
-Pos path[5] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+Pos sequence[8] = {};
 
 Mode      curr_mode  = JOYSTICK;
 PlayState play_state = STOPPED;
@@ -87,8 +89,9 @@ void play_routine(void)
 {
     if(play_state == PLAYING)
     {
-        for(int i = 0; i < 5; ++i)
+        for(int step = 1; step < 8; ++step)
         {
+            disp.set_num(step);
             set_pos(path[i]);
             delay(500);
         }
