@@ -167,6 +167,8 @@ void handle_buttons(uint8_t btn)
     }
 }
 
+
+/* Set the width of the throw of the laser */
 void set_width(void)
 {
     if(width_padding < 70)
