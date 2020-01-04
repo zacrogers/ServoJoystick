@@ -24,9 +24,9 @@ enum BtnIndex
     BT_PLAY = 0,
     BT_STOP, 
     BT_SAVE,
-    BT_EDIT,
     BT_INCR_STEP,
-    BT_DECR_STEP
+    BT_DECR_STEP,
+    BT_DISP_WIDTH
 };
 
 /* Coordinates should be stored as angle */
@@ -49,6 +49,7 @@ typedef struct
     uint8_t s0;
     uint8_t s1;
     uint8_t s2;
+    uint8_t out;
 }Mux;
 
 /* Used to index quick_pos array */
@@ -66,9 +67,9 @@ enum Position
     NUM_POSITIONS
 };
 
-#define MAX_ANGLE 180
+#define MAX_ANGLE 110
 #define MID_ANGLE 90
-#define MIN_ANGLE 0
+#define MIN_ANGLE 70
 
 /* For quickly moving laser without having to input angles manually each time */
 extern const Pos quick_pos[NUM_POSITIONS] = {{MIN_ANGLE, MAX_ANGLE}, {MID_ANGLE, MAX_ANGLE}, {MAX_ANGLE, MAX_ANGLE},
