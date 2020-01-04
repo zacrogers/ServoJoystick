@@ -8,9 +8,9 @@ const JoyStick js = {.x_pin   = A6,
                      .y_pin   = A7, 
                      .btn_pin = 5};
 
-const Mux btn_mux = {.s0 = 6,
-                     .s1 = 7,
-                     .s2 = 10
+const Mux btn_mux = {.s0  = 6,
+                     .s1  = 7,
+                     .s2  = 10
                      .out = A3};
 
 7Segment disp = 7Segment(11, 12, 13);
@@ -24,6 +24,9 @@ Pos sequence[8] = {};
 uint8_t   current_step = 0;
 Mode      current_mode = JOYSTICK;
 PlayState play_state   = STOPPED;
+
+/**/
+uint8_t width_padding = 0;
 
 void setup()
 {
@@ -71,8 +74,8 @@ Pos read_joystick(void)
     curr_pos.x = analogRead(js.x_pin);
     curr_pos.y = analogRead(js.y_pin);
     
-    curr_pos.x = map(curr_pos.x, 0, 1023, 0, 180);
-    curr_pos.y = map(curr_pos.y, 0, 1023, 0, 180);
+    curr_pos.x = map(curr_pos.x, 0, 1023, MIN_ANGLE, MAX_ANGLE);
+    curr_pos.y = map(curr_pos.y, 0, 1023, MIN_ANGLE, MAX_ANGLE);
     
     set_pos(curr_pos);
 }
@@ -94,9 +97,14 @@ void play_routine(void)
         for(int step = 1; step < 8; ++step)
         {
             disp.set_num(step);
-            set_pos(sequence[i]);
+            set_pos(sequence[step]);
             delay(500);
         }
+    }
+    else
+    {
+        disp.set_num(current_step);
+        set_pos(sequence[current_step]);    
     }
 }
 
@@ -154,8 +162,18 @@ void handle_buttons(uint8_t btn)
             break;
             
         case BT_DISP_WIDTH:
+            set_width();
             break;
     }
+}
+
+void set_width(void)
+{
+    if(width_padding < 70)
+        width_padding = width_padding + 10;
+    
+    if(width_padding == 70)
+        width_padding = 0;
 }
 
 void incr_step(void)
@@ -170,6 +188,7 @@ void decr_step(void)
         step--;
 }
 
+/* If mode is PLAY or RANDOM, stop or start movement */
 void toggle_playstate(void)
 {
     if(play_state == PLAYING)
