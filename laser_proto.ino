@@ -35,10 +35,10 @@ enum class BtnInd
     WIDTH    = 2
 };
 
-const uint8_t SPEED_POT = A5;
 const uint8_t BTN_PINS[NUM_BTNS] = {2, 5, 8};
 const uint8_t LED_PINS[NUM_LEDS] = {3, 4, 6, 7};
 
+const uint8_t SPEED_POT = A5;
 const JoyStick js = {.x_pin   = A4, 
                      .y_pin   = A3, 
                      .btn_pin = 99};
