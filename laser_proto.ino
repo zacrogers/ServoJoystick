@@ -1,13 +1,13 @@
 #include <Servo.h>
-#include "my_structs.h"
+#include "enums_and_structs.h"
 
-#define NUM_LEDS 5
+#define NUM_LEDS 4
 #define NUM_BTNS 3
 
 #define MAX_SPEED 1000
 #define MIN_SPEED 200
 
-enum State
+enum class State
 {
     PLAY,
     STOP,
@@ -21,26 +21,26 @@ enum class Mode
 
 enum class LedInd
 {
-    PLAY,
-    STOP,
-    RANDOM,
-    JOYSTICK
+    PLAY     = 0,
+    STOP     = 1,
+    RANDOM   = 2,
+    JOYSTICK = 3
 };
 
 
-enum BtnInd
+enum class BtnInd
 {
-    PLAY,
-    MODE,
-    WIDTH
+    PLAY     = 0,
+    MODE     = 1,
+    WIDTH    = 2
 };
 
-constuint8_t SPEED_POT = ;
-const uint8_t BTN_PINS[NUM_BTNS] = {};
-const uint8_t LED_PINS[NUM_LEDS] = {};
+const uint8_t SPEED_POT = A5;
+const uint8_t BTN_PINS[NUM_BTNS] = {2, 5, 8};
+const uint8_t LED_PINS[NUM_LEDS] = {3, 4, 6, 7};
 
-const JoyStick js = {.x_pin   = A6, 
-                     .y_pin   = A7, 
+const JoyStick js = {.x_pin   = A4, 
+                     .y_pin   = A3, 
                      .btn_pin = 99};
 
 Servo servo_x;
@@ -51,9 +51,8 @@ Pos curr_pos = {.x = 90, .y = 90};
 Mode      current_mode = JOYSTICK;
 PlayState play_state   = STOPPED;
 
-/**/
-uint8_t width_padding = 0;
-int speed = 200;
+uint8_t  width_padding = 0;
+uint16_t speed         = 200;
 
 void setup()
 {
@@ -62,6 +61,7 @@ void setup()
     
     pinMode(js.x_pin, INPUT);
     pinMode(js.y_pin, INPUT);
+    pinMode(SPEED_POT, INPUT);
     
     for(uint8_t btn = 0; btn < NUM_BTNS; ++btn)
     {
@@ -81,11 +81,11 @@ void setup()
 void loop()
 {
     speed = analongRead(SPEED_POT);
-    speed = map(speed,0, 1023, MIN_SPEED, MAX_SPEED);
+    speed = map(speed, 0, 1023, MIN_SPEED, MAX_SPEED);
 
     poll_buttons();
     
-    switch(curr_mode)
+    switch(current_mode)
     {
         case JOYSTICK:
             read_joystick();
@@ -97,6 +97,7 @@ void loop()
     }
 }
 
+/* Read analog joystick values and set global current position */
 Pos read_joystick(void)
 {
     curr_pos.x = analogRead(js.x_pin);
@@ -108,6 +109,7 @@ Pos read_joystick(void)
     set_pos(curr_pos);
 }
 
+/* Cycle through random positions, each step separated by a delay */
  void play_random(void)
  {
     if(play_state == PLAYING)
@@ -118,15 +120,16 @@ Pos read_joystick(void)
     }
  }
 
+/* Set xy posistion of laser pointer */
 void set_pos(Pos p)
 {
     servo_x.write(p.x);
     servo_y.write(p.y);
 }
 
+/* Play button set as interrupt so not included in polling function */
 void poll_buttons(void)
 {
-    /* Use joystick button to cycle through modes */
     if(digitalRead(BTN_PINS[BtnInd::MODE) == HIGH)
     {
         cycle_mode();
@@ -138,39 +141,7 @@ void poll_buttons(void)
         set_width();
         delay(200);
     }
-    
 }
-
-
-void handle_buttons(uint8_t btn)
-{
-    switch(btn)
-    {
-        case BT_PLAY:
-            toggle_playstate();
-            break;
-            
-        case BT_STOP:
-            break;
-            
-        case BT_SAVE:
-            set_step(current_step, Pos pos);
-            break;
-            
-        case BT_INCR_STEP:
-            incr_step();
-            break;
-            
-        case BT_DECR_STEP:
-            decr_step();
-            break;
-            
-        case BT_DISP_WIDTH:
-            set_width();
-            break;
-    }
-}
-
 
 /* Set the width of the throw of the laser */
 void set_width(void)
@@ -182,19 +153,19 @@ void set_width(void)
         width_padding = 0;
 }
 
-/* If mode is PLAY or RANDOM, stop or start movement */
+/* Toggles playstate and sets status leds */
 void toggle_playstate(void)
 {
-    if(play_state == PLAYING)
+    if(play_state == State::PLAYING)
     {
-        play_state == STOPPED;
+        play_state == State::STOPPED;
         digitalWrite(LED_PINS[LedInd::PLAY], LOW);
         digitalWrite(LED_PINS[LedInd::STOP], HIGH);        
     }
     
-    else if(play_state == STOPPED)
+    else if(play_state == State::STOPPED)
     {
-        play_state == PLAYING;    
+        play_state == State::PLAYING;    
         digitalWrite(LED_PINS[LedInd::STOP], LOW);
         digitalWrite(LED_PINS[LedInd::PLAY], HIGH);   
     }
@@ -202,18 +173,19 @@ void toggle_playstate(void)
     delay(200); /* Debounce */
 }
 
-void cycle_mode(void)
+/* Toggles mode and sets status leds */
+void toggle_mode(void)
 {
-    if(current_mode == JOYSTICK)
+    if(current_mode == Mode::JOYSTICK)
     {
-        current_mode == RANDOM;
+        current_mode == Mode::RANDOM;
         digitalWrite(LED_PINS[LedInd::JOYSTICK], LOW);
         digitalWrite(LED_PINS[LedInd::RANDOM], HIGH);        
     }
     
-    else if(current_mode == RANDOM)
+    else if(current_mode == Mode::RANDOM)
     {
-        current_mode == JOYSTICK;    
+        current_mode == Mode::JOYSTICK;    
         digitalWrite(LED_PINS[LedInd::RANDOM], LOW);
         digitalWrite(LED_PINS[LedInd::JOYSTICK], HIGH);   
     }
