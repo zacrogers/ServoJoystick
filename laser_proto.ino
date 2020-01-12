@@ -1,192 +1,180 @@
 #include <Servo.h>
-#include "enums_and_structs.h"
+#include "my_structs.h"
 
-#define NUM_LEDS 4
-#define NUM_BTNS 3
+uint8_t disp_offset = 15;
 
-#define MAX_SPEED 1000
-#define MIN_SPEED 200
-
-enum class State
-{
-    PLAY,
-    STOP,
-};
-
-enum class Mode
-{
-    RANDOM,
-    JOYSTICK
-};
-
-enum class LedInd
-{
-    PLAY     = 0,
-    STOP     = 1,
-    RANDOM   = 2,
-    JOYSTICK = 3
-};
+/* For quickly moving laser without having to input angles manually each time */
+extern const Pos quick_pos[NUM_POSITIONS] = {{MIN_ANGLE - disp_offset, MAX_ANGLE  + disp_offset},  // top left
+                                             {MID_ANGLE, MAX_ANGLE  + disp_offset},                // top middle
+                                             {MAX_ANGLE  + disp_offset, MAX_ANGLE  + disp_offset}, // top right
+                                             {MIN_ANGLE - disp_offset, MID_ANGLE},                 // mid left
+                                             {MID_ANGLE, MID_ANGLE},                               // mid centre
+                                             {MAX_ANGLE  + disp_offset, MID_ANGLE},                // mid right
+                                             {MIN_ANGLE - disp_offset, MIN_ANGLE},                 // bottom left
+                                             {MID_ANGLE, MIN_ANGLE - disp_offset},                 // bottom middle
+                                             {MAX_ANGLE  + disp_offset, MIN_ANGLE - disp_offset}}; // bottom right
 
 
-enum class BtnInd
-{
-    PLAY     = 0,
-    MODE     = 1,
-    WIDTH    = 2
-};
+/* Pin Defines */
+const JoyStick   JOY_STICK                 = {.x_pin = A5, .y_pin = A4, .btn_pin = 5};
+const uint8_t    LED_PINS[NUM_LEDS]        = {3, 4, 6, 7};
+const uint8_t    BTN_PINS[NUM_BUTTONS]     = {2, 5, 8};
+const uint8_t    SPEED_POT                 = A3;
+const uint8_t    SERVO_X_PIN               = 9;
+const uint8_t    SERVO_Y_PIN               = 10;
 
-const uint8_t BTN_PINS[NUM_BTNS] = {2, 5, 8};
-const uint8_t LED_PINS[NUM_LEDS] = {3, 4, 6, 7};
+Servo            servo_x;
+Servo            servo_y;
 
-const uint8_t SPEED_POT = A5;
-const JoyStick js = {.x_pin   = A4, 
-                     .y_pin   = A3, 
-                     .btn_pin = 99};
+/* Variables */
+Pos              curr_pos                  = {.x = 90, .y = 90};
+Mode             current_mode              = JOYSTICK;
+PlayState        play_state                = PLAYING;
+int              play_speed                = 100;
 
-Servo servo_x;
-Servo servo_y;
-
-Pos curr_pos = {.x = 90, .y = 90};
-
-Mode      current_mode = JOYSTICK;
-PlayState play_state   = STOPPED;
-
-uint8_t  width_padding = 0;
-uint16_t speed         = 200;
 
 void setup()
 {
-    servo_x.attach(8); 
-    servo_y.attach(9);
-    
-    pinMode(js.x_pin, INPUT);
-    pinMode(js.y_pin, INPUT);
-    pinMode(SPEED_POT, INPUT);
-    
-    for(uint8_t btn = 0; btn < NUM_BTNS; ++btn)
-    {
-        pinMode(BTN_PINS[btn], INPUT);    
-    }
+    Serial.begin(9600);
+    servo_x.attach(SERVO_X_PIN); 
+    servo_y.attach(SERVO_Y_PIN);
 
-    for(uint8_t led = 0; led < NUM_LEDS; ++btn)
+    for(uint8_t btn = 0; btn < NUM_BUTTONS; ++btn)
     {
-        pinMode(LED_PINS[led], OUTPUT);    
+        pinMode(BTN_PINS[btn], INPUT);  
     }
     
-    attachInterrupt(digitalPinToInterrupt(BTN_PINS[BtnInd::PLAY]), toggle_playstate, RISING);
+    for(uint8_t led = 0; led < NUM_LEDS; ++led)
+    {
+        pinMode(LED_PINS[led], OUTPUT);  
+    }
+    
+    pinMode(JOY_STICK.x_pin, INPUT);
+    pinMode(JOY_STICK.y_pin, INPUT);
+    pinMode(SPEED_POT,       INPUT);
+
+    attachInterrupt(digitalPinToInterrupt(BTN_PINS[PLAY]), toggle_playstate, RISING);
     
     set_pos(curr_pos);
+
+    /* Init leds*/
+    digitalWrite(LED_PINS[JOYSTICK], HIGH);
+    digitalWrite(LED_PINS[PLAYING],  HIGH);
 }
+
 
 void loop()
 {
-    speed = analongRead(SPEED_POT);
-    speed = map(speed, 0, 1023, MIN_SPEED, MAX_SPEED);
-
-    poll_buttons();
+    play_speed = analogRead(SPEED_POT);
+    play_speed = map(play_speed, 0, 1023, 200, 1000);
     
+    poll_buttons();
+
     switch(current_mode)
     {
         case JOYSTICK:
             read_joystick();
             break;
-
+                    
         case RANDOM:
             play_random();
             break;    
     }
 }
 
-/* Read analog joystick values and set global current position */
-Pos read_joystick(void)
+
+void read_joystick(void)
 {
-    curr_pos.x = analogRead(js.x_pin);
-    curr_pos.y = analogRead(js.y_pin);
+    curr_pos.x = analogRead(JOY_STICK.x_pin);
+    curr_pos.y = analogRead(JOY_STICK.y_pin);
+
+    uint8_t min_angle = MIN_ANGLE - disp_offset + 5;
+    uint8_t max_angle = MAX_ANGLE + disp_offset - 5;
     
-    curr_pos.x = map(curr_pos.x, 0, 1023, MIN_ANGLE, MAX_ANGLE);
-    curr_pos.y = map(curr_pos.y, 0, 1023, MIN_ANGLE, MAX_ANGLE);
+    curr_pos.x = map(curr_pos.x, 0, 1023, min_angle, max_angle);
+    curr_pos.y = map(curr_pos.y, 0, 1023, min_angle, max_angle);
     
     set_pos(curr_pos);
 }
 
-/* Cycle through random positions, each step separated by a delay */
- void play_random(void)
- {
+
+void play_random(void)
+{
     if(play_state == PLAYING)
     {
         Pos randpos = quick_pos[random(0, NUM_POSITIONS)];
         set_pos(randpos);
-        delay(speed);
+        delay(play_speed);
     }
- }
+}
 
-/* Set xy posistion of laser pointer */
+
 void set_pos(Pos p)
 {
     servo_x.write(p.x);
     servo_y.write(p.y);
 }
 
-/* Play button set as interrupt so not included in polling function */
+
 void poll_buttons(void)
 {
-    if(digitalRead(BTN_PINS[BtnInd::MODE) == HIGH)
+    if(digitalRead(BTN_PINS[MODE]) == HIGH)
     {
         cycle_mode();
-        delay(200);
+        delay(250);
     }
-    
-    if(digitalRead(BTN_PINS[BtnInd::WIDTH) == HIGH)
+
+    if(digitalRead(BTN_PINS[OFFSET]) == HIGH)
     {
         set_width();
-        delay(200);
-    }
+        delay(250);
+    }    
 }
+
 
 /* Set the width of the throw of the laser */
 void set_width(void)
 {
-    if(width_padding < 70)
-        width_padding = width_padding + 10;
+    if(disp_offset < 70)
+        disp_offset = disp_offset + 10;
     
-    if(width_padding == 70)
-        width_padding = 0;
+    if(disp_offset == 70)
+        disp_offset = disp_offset - 10;
 }
 
-/* Toggles playstate and sets status leds */
+
 void toggle_playstate(void)
 {
-    if(play_state == State::PLAYING)
+    if(play_state == PLAYING)
     {
-        play_state == State::STOPPED;
-        digitalWrite(LED_PINS[LedInd::PLAY], LOW);
-        digitalWrite(LED_PINS[LedInd::STOP], HIGH);        
+        play_state = STOPPED;
+        digitalWrite(LED_PINS[STOPPED], HIGH);
+        digitalWrite(LED_PINS[PLAYING], LOW);
     }
-    
-    else if(play_state == State::STOPPED)
+    else if(play_state == STOPPED)
     {
-        play_state == State::PLAYING;    
-        digitalWrite(LED_PINS[LedInd::STOP], LOW);
-        digitalWrite(LED_PINS[LedInd::PLAY], HIGH);   
+        play_state = PLAYING;    
+        digitalWrite(LED_PINS[PLAYING], HIGH);
+        digitalWrite(LED_PINS[STOPPED], LOW);
     }
-    
-    delay(200); /* Debounce */
+    delay(250);
 }
 
-/* Toggles mode and sets status leds */
-void toggle_mode(void)
+
+void cycle_mode(void)
 {
-    if(current_mode == Mode::JOYSTICK)
+    switch(current_mode)
     {
-        current_mode == Mode::RANDOM;
-        digitalWrite(LED_PINS[LedInd::JOYSTICK], LOW);
-        digitalWrite(LED_PINS[LedInd::RANDOM], HIGH);        
-    }
-    
-    else if(current_mode == Mode::RANDOM)
-    {
-        current_mode == Mode::JOYSTICK;    
-        digitalWrite(LED_PINS[LedInd::RANDOM], LOW);
-        digitalWrite(LED_PINS[LedInd::JOYSTICK], HIGH);   
+        case JOYSTICK:
+            current_mode = RANDOM;
+            digitalWrite(LED_PINS[JOYSTICK], LOW);
+            digitalWrite(LED_PINS[RANDOM], HIGH);
+            break;
+
+        case RANDOM:
+            current_mode = JOYSTICK;
+            digitalWrite(LED_PINS[RANDOM], LOW);
+            digitalWrite(LED_PINS[JOYSTICK], HIGH);
+            break;
     }
 }
