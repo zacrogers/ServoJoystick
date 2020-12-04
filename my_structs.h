@@ -1,13 +1,13 @@
 #ifndef MY_STRUCTS_H
 #define MY_STRUCTS_H
 
+#include <stdint.h>
+
 /* Servo control method mode */
 enum Mode
 {
     JOYSTICK = 0,
-    RANDOM,
-    FOLLOW,
-    PLAY,
+    RANDOM
 };
 
 /* Control playing of programmed sequence or random mode */
@@ -18,16 +18,6 @@ enum PlayState
     PAUSED
 };
 
-/* Indexes of buttons for setting mux channel  */
-enum BtnIndex
-{
-    BT_PLAY = 0,
-    BT_STOP, 
-    BT_SAVE,
-    BT_INCR_STEP,
-    BT_DECR_STEP,
-    BT_DISP_WIDTH
-};
 
 /* Coordinates should be stored as angle */
 typedef struct
@@ -43,14 +33,6 @@ typedef struct
     uint8_t y_pin;
     uint8_t btn_pin;
 }JoyStick;
-
-typedef struct
-{
-    uint8_t s0;
-    uint8_t s1;
-    uint8_t s2;
-    uint8_t out;
-}Mux;
 
 /* Used to index quick_pos array */
 enum Position

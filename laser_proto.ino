@@ -32,10 +32,8 @@ Mode             current_mode              = JOYSTICK;
 PlayState        play_state                = PLAYING;
 int              play_speed                = 100;
 
-
 void setup()
 {
-    Serial.begin(9600);
     servo_x.attach(SERVO_X_PIN); 
     servo_y.attach(SERVO_Y_PIN);
 
